@@ -8,6 +8,11 @@ const State = {
   viewingDir: 1,
   editingFile: 2,
 };
+// https://www.nerdfonts.com/cheat-sheet
+const Icons = {
+  folder: "\ue5ff",
+  fileGeneric: "\uf713",
+};
 
 let currentDir = process.cwd();
 let scroll = 0;
@@ -47,23 +52,34 @@ const rl = readline.createInterface({
 function listDir() {
   console.clear();
   let files = fs.readdirSync(currentDir);
-  let fileMap = files.map((f) => {
+  let fileArr = files.map((f) => {
     let fullPath = path.join(currentDir, f);
     let stat = fs.statSync(fullPath);
     return { name: f.split(/[\/\\]/g).pop(), path: fullPath, isDir: stat.isDirectory() };
   });
-  fileMap = fileMap.sort((f1, f2) => {
-    f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1;
-  });
+  let fileMap = [];
+  fileMap.push(
+    ...fileArr
+      .filter((f) => f.isDir)
+      .sort((f1, f2) => (f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1))
+  );
+  fileMap.push(
+    ...fileArr
+      .filter((f) => !f.isDir)
+      .sort((f1, f2) => (f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1))
+  );
   let maxScroll = fileMap.length - 1;
   if (scroll < 0) scroll = maxScroll;
   if (scroll > maxScroll) scroll = 0;
   let write = [];
   fileMap.forEach((f, ind) => {
     let sliced = f.name.slice(0, termSize().width / 2);
-    if (f.isDir) sliced = chalk.blue(sliced);
+    let ico = Icons.fileGeneric;
+    if (f.isDir) {
+      ico = Icons.folder;
+    }
     if (scroll == ind) sliced = chalk.bgWhite.black(sliced);
-    write.push(`${sliced}`);
+    write.push(`${ico} ${sliced}`);
   });
   process.stdout.cursorTo(0, 0);
   console.log(write.join("\n"));
