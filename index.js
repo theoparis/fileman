@@ -16,6 +16,7 @@ const Icons = {
 
 let currentDir = process.cwd();
 let scroll = 0;
+let maxScroll = 0;
 let state = State.viewingDir;
 
 console.clear();
@@ -35,6 +36,12 @@ process.stdin.on("keypress", (ch, key) => {
         case "down":
         case "s":
           scroll++;
+          break;
+        case "home":
+          scroll = 0;
+          break;
+        case "end":
+          scroll = maxScroll;
           break;
       }
     }
@@ -68,7 +75,7 @@ function listDir() {
       .filter((f) => !f.isDir)
       .sort((f1, f2) => (f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1))
   );
-  let maxScroll = fileMap.length - 1;
+  maxScroll = fileMap.length - 1;
   if (scroll < 0) scroll = maxScroll;
   if (scroll > maxScroll) scroll = 0;
   let write = [];
