@@ -1,11 +1,15 @@
 import fs from "fs";
 import path from "path";
 import readline from "readline";
-import termSize from "./termSize.js";
 import chalk from "chalk";
+import { termSize } from "./termSize.js";
+import { execSync } from "child_process";
 
-const DEBUG = false;
-const State = {
+/**
+ * @enum {number}
+ * @readonly
+ */
+const Mode = {
   viewingDir: 1,
   editingFile: 2,
 };
@@ -15,22 +19,69 @@ const Icons = {
   fileGeneric: "\uf713",
 };
 
-let currentDir = process.cwd();
 let scroll = 0;
 let maxScroll = 0;
+/**
+ * @type {{
+ * selected: {
+ *   name: string;
+ *   path: string;
+ *   isDir: boolean;
+ *   lastModified: Date;
+ * } | undefined;
+ * mode: Mode;
+ * showDate: boolean;
+ * showHidden: boolean;
+ * debug: boolean;
+ * exitWithCwd: boolean;
+ * currentDir: string;
+ * }}
+ */
+let state = {
+  mode: Mode.viewingDir,
+  showDate: false,
+  showHidden: true,
+  debug: process.env.DEBUG === "true",
+  // exitWithCwd: process.env.EXIT_CWD === "true"
+  exitWithCwd: true,
+  currentDir: process.cwd(),
+  selected: undefined,
+};
+/**
+ * @type {{
+ * name: string;
+ * path: string;
+ * isDir: boolean;
+ * lastModified: Date;
+ * }[]
+ * }
+ */
 let fileMap = [];
-let state = State.viewingDir;
+
+const openSelected = () => {
+  if (state.selected.isDir) {
+    state.currentDir = state.selected.path;
+    scroll = 0;
+    listDir();
+    // TODO: file editor
+  } else {
+  }
+};
 
 console.clear();
-
 readline.emitKeypressEvents(process.stdin);
-process.stdin.on("keypress", (ch, key) => {
+process.stdin.on("keypress", (_ch, key) => {
+  if (key.sequence === ".") key.name = key.sequence;
   if (key && key.ctrl && key.name == "c") {
     console.log("Exiting...");
+    // FIXME: cd on exit
+    if (state.exitWithCwd) execSync(`cd ${state.currentDir}`, {});
     process.exit();
   }
   if (!key.ctrl && !key.meta && !key.shift) {
-    if (state == State.viewingDir) {
+    if (state.mode == Mode.viewingDir) {
+      state.selected = fileMap[scroll];
+
       switch (key.name) {
         case "up":
         case "w":
@@ -46,34 +97,52 @@ process.stdin.on("keypress", (ch, key) => {
         case "end":
           scroll = maxScroll;
           break;
+        case "l":
+          state.showDate = !state.showDate;
+          break;
+        case "h":
+        case ".":
+          state.showHidden = !state.showHidden;
+          break;
         case "space":
           openSelected();
           break;
       }
     }
   }
-  if (state == State.viewingDir) listDir();
+  if (state.mode == Mode.viewingDir) listDir();
 });
 
 if (process.stdin.isTTY) process.stdin.setRawMode(true);
 
-const rl = readline.createInterface({
+// may come into use later
+/* const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-});
+}); */
 
 let numEntries = () => termSize().height - 2;
 let minS = 0;
 let maxS = numEntries();
-function listDir() {
+
+const listDir = () => {
   console.clear();
-  let files = fs.readdirSync(currentDir);
+  let files = fs.readdirSync(state.currentDir);
   let fileArr = files.map((f) => {
-    let fullPath = path.join(currentDir, f);
+    let fullPath = path.join(state.currentDir, f);
     let stat = fs.statSync(fullPath);
-    return { name: f.split(/[\/\\]/g).pop(), path: fullPath, isDir: stat.isDirectory() };
+    const name = f.split(/[/\\]/g).pop();
+
+    return {
+      name,
+      path: fullPath,
+      isDir: stat.isDirectory(),
+      lastModified: stat.ctime,
+    };
   });
-  fileMap = [{ name: "..", path: path.join(currentDir, ".."), isDir: true }];
+
+  if (!state.showHidden) fileArr = fileArr.filter((f) => !f.hidden);
+  fileMap = [{ name: "..", path: path.join(state.currentDir, ".."), isDir: true }];
   fileMap.push(
     ...fileArr
       .filter((f) => f.isDir)
@@ -107,7 +176,7 @@ function listDir() {
     maxS--;
     scroll = minS;
   }
-  let write = DEBUG ? [`${scroll} ${minS} ${maxS}`] : [];
+  let write = state.debug ? [`${scroll} ${minS} ${maxS}`] : [];
 
   fileMap.slice(minS, maxS).forEach((f) => {
     let ind = fileMap.indexOf(f);
@@ -117,19 +186,14 @@ function listDir() {
       ico = Icons.folder;
     }
     if (scroll == ind) sliced = chalk.bgWhite.black(sliced);
-    write.push(`${ico} ${sliced}` + (DEBUG ? ` ${ind}` : ""));
+    write.push(
+      `${ico} ${sliced} ${state.debug ? ` ${ind}` : ""} ${
+        state.showDate && f.lastModified ? f.lastModified : ""
+      }`
+    );
   });
   process.stdout.cursorTo(0, 0);
   process.stdout.write(write.join("\n"));
   process.stdout.cursorTo(0, termSize().height);
-}
+};
 listDir();
-
-function openSelected() {
-  let selected = fileMap[scroll];
-  if (selected.isDir) {
-    currentDir = selected.path;
-    scroll = 0;
-    listDir();
-  }
-}
