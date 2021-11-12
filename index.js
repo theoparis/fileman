@@ -120,7 +120,7 @@ function listDir() {
     write.push(`${ico} ${sliced}` + (DEBUG ? ` ${ind}` : ""));
   });
   process.stdout.cursorTo(0, 0);
-  console.log(write.join("\n"));
+  process.stdout.write(write.join("\n"));
   process.stdout.cursorTo(0, termSize().height);
 }
 listDir();
