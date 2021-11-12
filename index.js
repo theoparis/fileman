@@ -4,6 +4,7 @@ const readline = require("readline");
 const termSize = require("./termSize");
 const chalk = require("chalk");
 
+const DEBUG = false;
 const State = {
   viewingDir: 1,
   editingFile: 2,
@@ -17,9 +18,11 @@ const Icons = {
 let currentDir = process.cwd();
 let scroll = 0;
 let maxScroll = 0;
+let fileMap = [];
 let state = State.viewingDir;
 
 console.clear();
+
 readline.emitKeypressEvents(process.stdin);
 process.stdin.on("keypress", (ch, key) => {
   if (key && key.ctrl && key.name == "c") {
@@ -43,6 +46,9 @@ process.stdin.on("keypress", (ch, key) => {
         case "end":
           scroll = maxScroll;
           break;
+        case "space":
+          openSelected();
+          break;
       }
     }
   }
@@ -56,6 +62,9 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
+let numEntries = () => termSize().height - 2;
+let minS = 0;
+let maxS = numEntries();
 function listDir() {
   console.clear();
   let files = fs.readdirSync(currentDir);
@@ -64,7 +73,7 @@ function listDir() {
     let stat = fs.statSync(fullPath);
     return { name: f.split(/[\/\\]/g).pop(), path: fullPath, isDir: stat.isDirectory() };
   });
-  let fileMap = [];
+  fileMap = [{ name: "..", path: path.join(currentDir, ".."), isDir: true }];
   fileMap.push(
     ...fileArr
       .filter((f) => f.isDir)
@@ -76,20 +85,51 @@ function listDir() {
       .sort((f1, f2) => (f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1))
   );
   maxScroll = fileMap.length - 1;
-  if (scroll < 0) scroll = maxScroll;
-  if (scroll > maxScroll) scroll = 0;
-  let write = [];
-  fileMap.forEach((f, ind) => {
+  if (scroll < 0) scroll = 0;
+  if (scroll > maxScroll) scroll = maxScroll;
+
+  if (scroll == 0) {
+    minS = 0;
+    maxS = numEntries();
+  }
+  if (scroll == maxScroll) {
+    maxS = Math.max(numEntries(), maxScroll);
+    minS = Math.max(0, maxS - numEntries());
+  }
+
+  if (scroll == maxS) {
+    maxS++;
+    minS++;
+    scroll = maxS - 1;
+  }
+  if (scroll == minS - 1) {
+    minS--;
+    maxS--;
+    scroll = minS;
+  }
+  let write = DEBUG ? [`${scroll} ${minS} ${maxS}`] : [];
+
+  fileMap.slice(minS, maxS).forEach((f) => {
+    let ind = fileMap.indexOf(f);
     let sliced = f.name.slice(0, termSize().width / 2);
     let ico = Icons.fileGeneric;
     if (f.isDir) {
       ico = Icons.folder;
     }
     if (scroll == ind) sliced = chalk.bgWhite.black(sliced);
-    write.push(`${ico} ${sliced}`);
+    write.push(`${ico} ${sliced}` + (DEBUG ? ` ${ind}` : ""));
   });
   process.stdout.cursorTo(0, 0);
   console.log(write.join("\n"));
   process.stdout.cursorTo(0, termSize().height);
 }
 listDir();
+
+function openSelected() {
+  let selected = fileMap[scroll];
+  if (selected.isDir) {
+    currentDir = selected.path;
+    scroll = 0;
+    listDir();
+  }
+}
