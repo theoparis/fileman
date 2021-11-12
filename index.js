@@ -1,8 +1,8 @@
-const fs = require("fs");
-const path = require("path");
-const readline = require("readline");
-const termSize = require("./termSize");
-const chalk = require("chalk");
+import fs from "fs";
+import path from "path";
+import readline from "readline";
+import termSize from "./termSize.js";
+import chalk from "chalk";
 
 const DEBUG = false;
 const State = {

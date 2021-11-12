@@ -5,7 +5,7 @@ const create = (columns, rows) => ({
   height: Number.parseInt(rows, 10),
 });
 
-module.exports = function termSize() {
+export default function termSize() {
   // from the npm package 'term-size'
   const { env, stdout, stderr } = process;
 
@@ -22,4 +22,4 @@ module.exports = function termSize() {
   }
 
   return create(80, 24);
-};
+}
