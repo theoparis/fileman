@@ -23,6 +23,10 @@ const Icons = {
   folderNPM: "\ue5fa",
   fileGeneric: "\uf713",
   window: "\ufaae",
+  up: "\uf062",
+  down: "\uf063",
+  back: "\ufc31",
+  details: "\uf449",
 };
 
 let scroll = 0;
@@ -55,6 +59,7 @@ let state = {
   dateRelative: true,
   dateFormat: "ff", // https://moment.github.io/luxon/#/formatting?id=table-of-tokens
   title: "FileMan",
+  footer: "",
 };
 /**
  * @type {{
@@ -149,6 +154,11 @@ const titleBar = () => {
     chalk.bgBlue.white(Icons.window + (centerAlign(title, termSize().width - 1) + "  ").slice(1))
   );
 };
+const footerBar = (y) => {
+  let footer = state.footer;
+  process.stdout.cursorTo(0, y);
+  process.stdout.write(chalk.white(centerAlign(footer, termSize().width - 1) + "  "));
+};
 
 const listDir = () => {
   let files = fs.readdirSync(state.currentDir);
@@ -240,11 +250,13 @@ const listDir = () => {
   });
 
   state.title = state.currentDir.slice(0, termSize().width - 4);
+  state.footer = `${Icons.up} W ${Icons.down} S ${Icons.back} A ${Icons.details} L`;
 
   console.clear();
   titleBar();
   process.stdout.cursorTo(0, 1);
   process.stdout.write(write.join("\n"));
+  footerBar(termSize().height - 1);
   process.stdout.cursorTo(0, termSize().height);
 };
 listDir();
