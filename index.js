@@ -193,11 +193,14 @@ const listDir = () => {
     let written = `${ico} ${sliced} ${state.debug ? ` ${ind}` : ""}`.length;
     let endItems = `${state.showDate ? formattedDate || "" : ""}`;
 
-    if (scroll == ind) sliced = chalk.bgWhite.black(sliced);
-
     let pad = " ".repeat(Math.max(1, termSize().width - written - endItems.length));
 
-    write.push(`${ico} ${sliced} ${state.debug ? ` ${ind}` : ""}${pad}${endItems}`);
+    write.push(
+      `${ico} ` +
+        (scroll == ind ? chalk.bgWhite.black : String)(
+          `${sliced} ${state.debug ? ` ${ind}` : ""}${pad}${endItems}`
+        )
+    );
   });
 
   console.clear();
