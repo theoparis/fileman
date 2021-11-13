@@ -6,6 +6,7 @@ import { termSize } from "./termSize.js";
 import { execSync } from "child_process";
 import { DateTime } from "luxon";
 import { formatBytes } from "./formatters.js";
+import centerAlign from "./centerAlign.js";
 
 /**
  * @enum {number}
@@ -17,8 +18,11 @@ const Mode = {
 };
 // https://www.nerdfonts.com/cheat-sheet
 const Icons = {
-  folder: "\ue5ff",
+  folderGeneric: "\ue5ff",
+  folderGit: "\ue5fb",
+  folderNPM: "\ue5fa",
   fileGeneric: "\uf713",
+  window: "\ufaae",
 };
 
 let scroll = 0;
@@ -50,6 +54,7 @@ let state = {
   selected: undefined,
   dateRelative: true,
   dateFormat: "ff", // https://moment.github.io/luxon/#/formatting?id=table-of-tokens
+  title: "FileMan",
 };
 /**
  * @type {{
@@ -76,13 +81,14 @@ console.clear();
 readline.emitKeypressEvents(process.stdin);
 process.stdin.on("keypress", (_ch, key) => {
   if (key.sequence === ".") key.name = key.sequence;
+
   if (key && key.ctrl && key.name == "c") {
     console.log("Exiting...");
     // FIXME: cd on exit
     if (state.exitWithCwd) execSync(`cd ${state.currentDir}`, {});
     process.exit();
   }
-  if (!key.ctrl && !key.meta && !key.shift) {
+  if (!key.ctrl && !key.shift) {
     if (state.mode == Mode.viewingDir) {
       state.selected = fileMap[scroll];
 
@@ -94,6 +100,13 @@ process.stdin.on("keypress", (_ch, key) => {
         case "down":
         case "s":
           scroll++;
+          break;
+        case "left":
+        case "a":
+        case "escape":
+          scroll = 0;
+          state.selected = fileMap[0];
+          openSelected();
           break;
         case "home":
           scroll = 0;
@@ -128,6 +141,14 @@ if (process.stdin.isTTY) process.stdin.setRawMode(true);
 let numEntries = () => termSize().height - 2;
 let minS = 0;
 let maxS = numEntries();
+
+const titleBar = () => {
+  let title = state.title + " - FileMan";
+  process.stdout.cursorTo(0, 0);
+  process.stdout.write(
+    chalk.bgBlue.white(Icons.window + (centerAlign(title, termSize().width - 1) + "  ").slice(1))
+  );
+};
 
 const listDir = () => {
   let files = fs.readdirSync(state.currentDir);
@@ -187,7 +208,16 @@ const listDir = () => {
     let sliced = f.name.slice(0, termSize().width / 2);
     let ico = Icons.fileGeneric;
     if (f.isDir) {
-      ico = Icons.folder;
+      switch (f.name) {
+        case ".git":
+          ico = Icons.folderGit;
+          break;
+        case "node_modules":
+          ico = Icons.folderNPM;
+          break;
+        default:
+          ico = Icons.folderGeneric;
+      }
     }
     let formattedDate = f.lastModified?.toFormat(state.dateFormat);
     if (state.dateRelative) formattedDate = f.lastModified?.toRelative();
@@ -209,8 +239,11 @@ const listDir = () => {
     );
   });
 
+  state.title = state.currentDir.slice(0, termSize().width - 4);
+
   console.clear();
-  process.stdout.cursorTo(0, 0);
+  titleBar();
+  process.stdout.cursorTo(0, 1);
   process.stdout.write(write.join("\n"));
   process.stdout.cursorTo(0, termSize().height);
 };
