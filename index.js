@@ -4,6 +4,7 @@ import readline from "readline";
 import chalk from "chalk";
 import { termSize } from "./termSize.js";
 import { execSync } from "child_process";
+import { DateTime } from "luxon";
 
 /**
  * @enum {number}
@@ -46,6 +47,8 @@ let state = {
   exitWithCwd: true,
   currentDir: process.cwd(),
   selected: undefined,
+  dateRelative: true,
+  dateFormat: "ff", // https://moment.github.io/luxon/#/formatting?id=table-of-tokens
 };
 /**
  * @type {{
@@ -126,7 +129,6 @@ let minS = 0;
 let maxS = numEntries();
 
 const listDir = () => {
-  console.clear();
   let files = fs.readdirSync(state.currentDir);
   let fileArr = files.map((f) => {
     let fullPath = path.join(state.currentDir, f);
@@ -137,7 +139,7 @@ const listDir = () => {
       name,
       path: fullPath,
       isDir: stat.isDirectory(),
-      lastModified: stat.ctime,
+      lastModified: DateTime.fromJSDate(new Date(stat.mtimeMs)),
     };
   });
 
@@ -185,13 +187,20 @@ const listDir = () => {
     if (f.isDir) {
       ico = Icons.folder;
     }
+    let formattedDate = f.lastModified?.toFormat(state.dateFormat);
+    if (state.dateRelative) formattedDate = f.lastModified?.toRelative();
+
+    let written = `${ico} ${sliced} ${state.debug ? ` ${ind}` : ""}`.length;
+    let endItems = `${state.showDate ? formattedDate || "" : ""}`;
+
     if (scroll == ind) sliced = chalk.bgWhite.black(sliced);
-    write.push(
-      `${ico} ${sliced} ${state.debug ? ` ${ind}` : ""} ${
-        state.showDate && f.lastModified ? f.lastModified : ""
-      }`
-    );
+
+    let pad = " ".repeat(Math.max(1, termSize().width - written - endItems.length));
+
+    write.push(`${ico} ${sliced} ${state.debug ? ` ${ind}` : ""}${pad}${endItems}`);
   });
+
+  console.clear();
   process.stdout.cursorTo(0, 0);
   process.stdout.write(write.join("\n"));
   process.stdout.cursorTo(0, termSize().height);
