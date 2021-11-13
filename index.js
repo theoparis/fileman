@@ -31,7 +31,7 @@ let maxScroll = 0;
  *   lastModified: Date;
  * } | undefined;
  * mode: Mode;
- * showDate: boolean;
+ * showExtras: boolean;
  * showHidden: boolean;
  * debug: boolean;
  * exitWithCwd: boolean;
@@ -40,7 +40,7 @@ let maxScroll = 0;
  */
 let state = {
   mode: Mode.viewingDir,
-  showDate: false,
+  showExtras: false,
   showHidden: true,
   debug: process.env.DEBUG === "true",
   // exitWithCwd: process.env.EXIT_CWD === "true"
@@ -101,7 +101,7 @@ process.stdin.on("keypress", (_ch, key) => {
           scroll = maxScroll;
           break;
         case "l":
-          state.showDate = !state.showDate;
+          state.showExtras = !state.showExtras;
           break;
         case "h":
         case ".":
@@ -191,7 +191,7 @@ const listDir = () => {
     if (state.dateRelative) formattedDate = f.lastModified?.toRelative();
 
     let written = `${ico} ${sliced} ${state.debug ? ` ${ind}` : ""}`.length;
-    let endItems = `${state.showDate ? formattedDate || "" : ""}`;
+    let endItems = `${state.showExtras ? formattedDate || "" : ""}`;
 
     let pad = " ".repeat(Math.max(1, termSize().width - written - endItems.length));
 
