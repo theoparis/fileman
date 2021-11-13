@@ -5,6 +5,7 @@ import chalk from "chalk";
 import { termSize } from "./termSize.js";
 import { execSync } from "child_process";
 import { DateTime } from "luxon";
+import { formatBytes } from "./formatters.js";
 
 /**
  * @enum {number}
@@ -140,6 +141,7 @@ const listDir = () => {
       path: fullPath,
       isDir: stat.isDirectory(),
       lastModified: DateTime.fromJSDate(new Date(stat.mtimeMs)),
+      size: stat.size,
     };
   });
 
@@ -189,9 +191,13 @@ const listDir = () => {
     }
     let formattedDate = f.lastModified?.toFormat(state.dateFormat);
     if (state.dateRelative) formattedDate = f.lastModified?.toRelative();
+    let formattedSize = f.isDir ? "" : formatBytes(f.size);
 
     let written = `${ico} ${sliced} ${state.debug ? ` ${ind}` : ""}`.length;
-    let endItems = `${state.showExtras ? formattedDate || "" : ""}`;
+    let endItems =
+      state.showExtras && f.lastModified
+        ? [formattedDate, formattedSize].filter((e) => e).join(" - ")
+        : "";
 
     let pad = " ".repeat(Math.max(1, termSize().width - written - endItems.length));
 
