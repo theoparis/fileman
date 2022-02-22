@@ -151,13 +151,17 @@ const titleBar = () => {
   let title = state.title + " - FileMan";
   process.stdout.cursorTo(0, 0);
   process.stdout.write(
-    chalk.bgBlue.white(Icons.window + (centerAlign(title, termSize().width - 1) + "  ").slice(1))
+    chalk.bgBlue.white(
+      Icons.window + (centerAlign(title, termSize().width - 1) + "  ").slice(1)
+    )
   );
 };
 const footerBar = (y) => {
   let footer = state.footer;
   process.stdout.cursorTo(0, y);
-  process.stdout.write(chalk.white(centerAlign(footer, termSize().width - 1) + "  "));
+  process.stdout.write(
+    chalk.white(centerAlign(footer, termSize().width - 1) + "  ")
+  );
 };
 
 const listDir = () => {
@@ -177,16 +181,22 @@ const listDir = () => {
   });
 
   if (!state.showHidden) fileArr = fileArr.filter((f) => !f.hidden);
-  fileMap = [{ name: "..", path: path.join(state.currentDir, ".."), isDir: true }];
+  fileMap = [
+    { name: "..", path: path.join(state.currentDir, ".."), isDir: true },
+  ];
   fileMap.push(
     ...fileArr
       .filter((f) => f.isDir)
-      .sort((f1, f2) => (f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1))
+      .sort((f1, f2) =>
+        f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1
+      )
   );
   fileMap.push(
     ...fileArr
       .filter((f) => !f.isDir)
-      .sort((f1, f2) => (f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1))
+      .sort((f1, f2) =>
+        f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1
+      )
   );
   maxScroll = fileMap.length - 1;
   if (scroll < 0) scroll = 0;
@@ -239,7 +249,9 @@ const listDir = () => {
         ? [formattedDate, formattedSize].filter((e) => e).join(" - ")
         : "";
 
-    let pad = " ".repeat(Math.max(1, termSize().width - written - endItems.length));
+    let pad = " ".repeat(
+      Math.max(1, termSize().width - written - endItems.length)
+    );
 
     write.push(
       `${ico} ` +

@@ -1,7 +1,0 @@
-{
-  "extends": ["@theoparis/eslint-config"],
-  "rules": {
-    "no-shadow": "off",
-    "prefer-arrow-callback": "warn"
-  }
-}
