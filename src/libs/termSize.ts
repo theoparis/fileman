@@ -1,14 +1,3 @@
-/**
- *
- * @param {number} columns
- * @param {number} rows
- * @returns {{
- * columns: number;
- * width: number;
- * rows: number;
- * height: number;
- * }}
- */
 const create = (columns, rows) => ({
   columns: Number.parseInt(columns, 10),
   width: Number.parseInt(columns, 10),

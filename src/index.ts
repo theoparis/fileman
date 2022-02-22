@@ -2,16 +2,12 @@ import fs from "fs";
 import path from "path";
 import readline from "readline";
 import chalk from "chalk";
-import { termSize } from "./termSize.js";
+import { termSize } from "./libs/termSize.js";
 import { execSync } from "child_process";
 import { DateTime } from "luxon";
-import { formatBytes } from "./formatters.js";
-import centerAlign from "./centerAlign.js";
+import { formatBytes } from "./libs/formatters.js";
+import centerAlign from "./libs/centerAlign.js";
 
-/**
- * @enum {number}
- * @readonly
- */
 const Mode = {
   viewingDir: 1,
   editingFile: 2,
@@ -34,23 +30,7 @@ const Icons = {
 
 let scroll = 0;
 let maxScroll = 0;
-/**
- * @type {{
- * selected: {
- *   name: string;
- *   path: string;
- *   isDir: boolean;
- *   lastModified: Date;
- * } | undefined;
- * mode: Mode;
- * showExtras: boolean;
- * showHidden: boolean;
- * debug: boolean;
- * exitWithCwd: boolean;
- * currentDir: string;
- * }}
- */
-let state = {
+const state = {
   mode: Mode.viewingDir,
   showExtras: false,
   showHidden: false,
@@ -64,15 +44,6 @@ let state = {
   title: "FileMan",
   footer: "",
 };
-/**
- * @type {{
- * name: string;
- * path: string;
- * isDir: boolean;
- * lastModified: Date;
- * }[]
- * }
- */
 let fileMap = [];
 
 const openSelected = () => {
@@ -130,6 +101,7 @@ process.stdin.on("keypress", (_ch, key) => {
           state.showHidden = !state.showHidden;
           break;
         case "space":
+        case "d":
           openSelected();
           break;
       }

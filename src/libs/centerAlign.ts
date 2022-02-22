@@ -42,16 +42,16 @@ function longest(arr) {
 }
 
 function align(val, fn) {
-  let originalType = typeOf(val);
+  let originalType = typeof val;
   let lines = val;
 
   if (originalType === "string") {
     lines = val.split(/(?:\r\n|\n)/);
-  } else if (originalType !== "array") {
+  } else if (!Array.isArray(val)) {
     throw new TypeError("No input found. Provide a string or array to align.");
   }
 
-  let fnType = typeOf(fn);
+  let fnType = typeof fn;
   let max = longest(lines);
   let len = lines.length;
   let idx = -1;
@@ -69,21 +69,21 @@ function align(val, fn) {
       diff = max.length - line.length;
     }
 
-    if (typeOf(diff) === "number") {
+    if (typeof diff === "number") {
       res.push(" ".repeat(diff) + line);
-    } else if (typeOf(diff) === "object") {
+    } else if (typeof diff === "object") {
       let result = (diff.character || " ").repeat(diff.indent || 0);
       res.push((diff.prefix || "") + result + line);
     }
   }
 
-  if (originalType === "array") return res;
+  if (Array.isArray(val)) return res;
   return res.join("\n");
 }
 
 export default function centerAlign(val, width) {
   if (typeof width === "number" && typeof val === "string" && !/\n/.test(val)) {
-    let padding = Math.floor((width - val.length) / 2);
+    let padding = Math.max(0, Math.floor((width - val.length) / 2));
     return " ".repeat(padding) + val + " ".repeat(padding);
   }
 
