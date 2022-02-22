@@ -25,8 +25,11 @@ const Icons = {
   window: "\ufaae",
   up: "\uf062",
   down: "\uf063",
-  back: "\ufc31",
-  details: "\uf449",
+  back: "\ufc30",
+  forward: "\ufc33",
+  details: "\uf05a",
+  eye: "\uf707",
+  eyeCross: "\uf708",
 };
 
 let scroll = 0;
@@ -50,7 +53,7 @@ let maxScroll = 0;
 let state = {
   mode: Mode.viewingDir,
   showExtras: false,
-  showHidden: true,
+  showHidden: false,
   debug: process.env.DEBUG === "true",
   // exitWithCwd: process.env.EXIT_CWD === "true"
   exitWithCwd: true,
@@ -177,6 +180,7 @@ const listDir = () => {
       isDir: stat.isDirectory(),
       lastModified: DateTime.fromJSDate(new Date(stat.mtimeMs)),
       size: stat.size,
+      hidden: name.startsWith("."),
     };
   });
 
@@ -246,7 +250,7 @@ const listDir = () => {
     let written = `${ico} ${sliced} ${state.debug ? ` ${ind}` : ""}`.length;
     let endItems =
       state.showExtras && f.lastModified
-        ? [formattedDate, formattedSize].filter((e) => e).join(" - ")
+        ? [formattedSize, formattedDate].filter((e) => e).join(" - ")
         : "";
 
     let pad = " ".repeat(
@@ -262,7 +266,16 @@ const listDir = () => {
   });
 
   state.title = state.currentDir.slice(0, termSize().width - 4);
-  state.footer = `${Icons.up} W ${Icons.down} S ${Icons.back} A ${Icons.details} L`;
+  state.footer = Object.entries({
+    W: Icons.up,
+    S: Icons.down,
+    A: Icons.back,
+    D: Icons.forward,
+    L: Icons.details,
+    H: state.showHidden ? Icons.eyeCross : Icons.eye,
+  })
+    .map((ic) => `${ic[0]} ${ic[1]}`)
+    .join(" | ");
 
   console.clear();
   titleBar();
