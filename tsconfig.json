@@ -1,10 +1,16 @@
 {
   "compilerOptions": {
-    "module": "esnext",
-    "target": "esnext",
+    "module": "commonjs",
+    "target": "es6",
     "outDir": "dist",
-    "moduleResolution": "Node",
-    "allowSyntheticDefaultImports": true
+    "rootDir": "src",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "chalk": [
+        "./node_modules/chalk/source/index.js",
+        "./node_modules/chalk/index.d.ts"
+      ]
+    }
   },
-  "include": ["src"]
+  "include": ["src/**/*"]
 }

@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
-  "type": "module",
   "scripts": {
     "start": "tsc -b tsconfig.json && node ."
   },
@@ -11,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/chalk": "^2.2.0",
     "@types/luxon": "^2.0.9",
     "@types/node": "^17.0.19",
     "chalk": "^4.1.2",
