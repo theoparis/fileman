@@ -45,8 +45,7 @@ export default class FileManager {
       if (key.name == "tab") {
         if (this.mode == Mode.viewingDir) {
           this.mode = Mode.commandPrompt;
-          this.commandPrompt.input = [];
-          this.commandPrompt.cursorPos = 0;
+          this.commandPrompt.reset();
           this.commandPrompt.update();
           return;
         } else if (this.mode == Mode.commandPrompt) {
