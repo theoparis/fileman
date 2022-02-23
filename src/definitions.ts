@@ -3,6 +3,7 @@ import { DateTime } from "luxon";
 export enum Mode {
   viewingDir,
   editingFile,
+  commandPrompt,
 }
 // https://www.nerdfonts.com/cheat-sheet
 export enum Icons {
@@ -25,8 +26,6 @@ export interface Options {
   debug: boolean;
   exitWithCwd: boolean;
   dateRelative: boolean;
-  title: string;
-  footer: string;
 }
 export interface File {
   name: string;
@@ -36,11 +35,4 @@ export interface File {
   size?: number;
   hidden?: boolean;
 }
-export interface Key {
-  sequence: string;
-  name: string;
-  ctrl: boolean;
-  meta: boolean;
-  shift: boolean;
-  code?: string;
-}
+export const validCharacters = `\`~1234567890!@#$%^&*()-=_+[]{}\\|;:'",<.>/?qwertyuiopasdfghjklzxcvbnm `;

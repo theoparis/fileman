@@ -1,6 +1,7 @@
 import * as chalk from "chalk";
 import { execSync } from "child_process";
 import { emitKeypressEvents, Key } from "readline";
+import CommandPrompt from "./CommandPrompt";
 import { Icons, Mode, Options } from "./definitions";
 import FileViewer from "./FileViewer";
 import centerAlign from "./libs/centerAlign";
@@ -10,14 +11,13 @@ export default class FileManager {
   public opts: Options = {
     showExtras: false,
     showHidden: false,
-    debug: process.env.DEBUG === "true",
+    debug: false,
     exitWithCwd: true,
     dateRelative: true,
-    title: "FileMan",
-    footer: "",
   };
   public mode = Mode.viewingDir;
   public viewer: FileViewer;
+  public commandPrompt: CommandPrompt;
   public cwd = process.cwd();
 
   public title = "";
@@ -33,21 +33,35 @@ export default class FileManager {
 
     this.viewer = new FileViewer(this);
     this.viewer.update();
+    this.commandPrompt = new CommandPrompt(this);
   }
 
   public onKeypress(key: Key) {
     if (key.sequence === ".") key.name = key.sequence;
 
-    if (key && key.ctrl && key.name == "c") {
-      console.log("Exiting...");
-      // TODO: fix cd on exit
-      if (this.opts.exitWithCwd) execSync(`cd ${this.cwd}`, {});
-      process.exit();
-    }
-    if (!key.ctrl && !key.shift) {
-      if (this.mode == Mode.viewingDir) this.viewer.onKeypress(key.name);
-    }
-    if (this.mode == Mode.viewingDir) this.viewer.update();
+    if (key && key.ctrl && key.name == "c") return this.exit();
+
+    if (!key.ctrl) {
+      if (key.name == "tab") {
+        if (this.mode == Mode.viewingDir) {
+          this.mode = Mode.commandPrompt;
+          this.commandPrompt.input = [];
+          this.commandPrompt.cursorPos = 0;
+          this.commandPrompt.update();
+          return;
+        } else if (this.mode == Mode.commandPrompt) {
+          this.mode = Mode.viewingDir;
+          this.viewer.update();
+          return;
+        }
+      }
+      if (this.mode == Mode.viewingDir) {
+        this.viewer.onKeypress(key.name);
+      } else if (this.mode == Mode.commandPrompt) {
+        this.commandPrompt.onKeypress(key);
+      }
+    } else if (this.mode == Mode.viewingDir) this.viewer.update();
+    else if (this.mode == Mode.commandPrompt) this.commandPrompt.update();
   }
 
   public printTitle() {
@@ -66,5 +80,13 @@ export default class FileManager {
     process.stdout.write(
       chalk.white(centerAlign(footer, termSize().width - 1) + "  ")
     );
+  }
+
+  public exit() {
+    console.clear();
+    console.log("Exiting...");
+    // TODO: fix cd on exit
+    if (this.opts.exitWithCwd) execSync(`cd ${this.cwd}`, {});
+    process.exit();
   }
 }

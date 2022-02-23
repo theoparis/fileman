@@ -56,6 +56,7 @@ export default class FileViewer {
         this.openSelected();
         break;
     }
+    this.update();
   }
 
   public openSelected() {
@@ -123,7 +124,7 @@ export default class FileViewer {
       maxS--;
       this.scroll = minS;
     }
-    let write = this.man.opts.debug ? [`${scroll} ${minS} ${maxS}`] : [];
+    let write = this.man.opts.debug ? [`${this.scroll} ${minS} ${maxS}`] : [];
 
     this.files.slice(minS, maxS).forEach((f) => {
       let ind = this.files.indexOf(f);
