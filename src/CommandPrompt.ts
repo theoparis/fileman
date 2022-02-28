@@ -1,4 +1,5 @@
 import * as chalk from "chalk";
+import { spawn } from "child_process";
 import { Key } from "readline";
 import { Mode, validCharacters } from "./definitions";
 import FileManager from "./FileManager";
@@ -9,6 +10,7 @@ export default class CommandPrompt {
   public history: string[][] = [];
   public input: string[] = [];
   public cursorPos = 0;
+  public output: string[] = [];
 
   constructor(public man: FileManager) {}
 
@@ -19,6 +21,24 @@ export default class CommandPrompt {
       return;
     } else if (key.name == "return" && this.input.length) {
       this.history.unshift(this.input);
+      this.output.push(`$ ${this.input.join("")}`);
+      const inp = spawn(
+        this.input.join("").split(" ")[0],
+        this.input.join("").split(" ").slice(1),
+        { shell: true, detached: true, cwd: this.man.cwd, env: process.env }
+      );
+      inp.stdout.on("data", (d) => {
+        this.output.push(...d.toString("utf8").split("\n"));
+        this.update();
+      });
+      inp.stderr.on("data", (d) => {
+        this.output.push(...d.toString("utf8").split("\n"));
+        this.update();
+      });
+      inp.on("exit", (d) => {
+        this.output.push("exit " + d);
+        this.update();
+      });
       this.reset();
     } else if (key.name == "backspace") {
       if (this.input[this.cursorPos - 1])
@@ -68,7 +88,7 @@ export default class CommandPrompt {
     console.clear();
     this.man.printTitle();
     process.stdout.cursorTo(0, 1);
-    process.stdout.write("text");
+    process.stdout.write(this.output.join("\n"));
     process.stdout.cursorTo(0, termSize().height);
     process.stdout.write(chalk.bgWhite.black(" ".repeat(termSize().width)));
     process.stdout.cursorTo(0, termSize().height);
