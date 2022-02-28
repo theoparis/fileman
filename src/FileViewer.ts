@@ -2,7 +2,7 @@ import * as chalk from "chalk";
 import { readdirSync, statSync } from "fs";
 import { DateTime } from "luxon";
 import { join } from "path";
-import { File, Icons } from "./definitions";
+import { CustomFiles, File, Icons } from "./definitions";
 import FileManager from "./FileManager";
 import { formatBytes } from "./libs/formatters";
 import { termSize } from "./libs/termSize";
@@ -129,18 +129,19 @@ export default class FileViewer {
     this.files.slice(minS, maxS).forEach((f) => {
       let ind = this.files.indexOf(f);
       let sliced = f.name.slice(0, termSize().width / 2);
-      let ico = Icons.fileGeneric;
+      let ico = "";
+      Object.entries(CustomFiles).forEach((ent) => {
+        if (
+          f.name.match(
+            new RegExp(ent[1].toString().replace(/\/$/, "$").substring(1))
+          )?.length
+        )
+          ico = ent[0];
+      });
       if (f.isDir) {
-        switch (f.name) {
-          case ".git":
-            ico = Icons.folderGit;
-            break;
-          case "node_modules":
-            ico = Icons.folderNPM;
-            break;
-          default:
-            ico = Icons.folderGeneric;
-        }
+        if (!ico) ico = Icons.folderGeneric;
+      } else {
+        if (!ico) ico = Icons.fileGeneric;
       }
       let formattedDate = f.lastModified?.toFormat("ff");
       if (this.man.opts.dateRelative)

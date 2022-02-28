@@ -8,8 +8,6 @@ export enum Mode {
 // https://www.nerdfonts.com/cheat-sheet
 export enum Icons {
   folderGeneric = "\ue5ff",
-  folderGit = "\ue5fb",
-  folderNPM = "\ue5fa",
   fileGeneric = "\uf713",
   window = "\ufaae",
   up = "\uf062",
@@ -36,3 +34,9 @@ export interface File {
   hidden?: boolean;
 }
 export const validCharacters = `\`~1234567890!@#$%^&*()-=_+[]{}\\|;:'",<.>/?qwertyuiopasdfghjklzxcvbnm `;
+
+export const CustomFiles = {
+  "\ue5fb": /\.git/,
+  "\ue702": /\.gitignore/,
+  "\ue5fa": /node_modules/,
+};
