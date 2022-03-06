@@ -1,9 +1,10 @@
 import * as chalk from "chalk";
-import { spawn } from "child_process";
+import { IPty, spawn } from "node-pty";
 import { Key } from "readline";
 import { Mode, validCharacters } from "./definitions";
 import FileManager from "./FileManager";
 import { termSize } from "./libs/termSize";
+import { platform } from "os";
 
 export default class CommandPrompt {
   public historyIndex = -1;
@@ -11,6 +12,7 @@ export default class CommandPrompt {
   public input: string[] = [];
   public cursorPos = 0;
   public output: string[] = [];
+  public pty: IPty;
 
   constructor(public man: FileManager) {}
 
@@ -21,25 +23,8 @@ export default class CommandPrompt {
       return;
     } else if (key.name == "return" && this.input.length) {
       this.history.unshift(this.input);
-      this.output.push(`$ ${this.input.join("")}`);
-      const inp = spawn(
-        this.input.join("").split(" ")[0],
-        this.input.join("").split(" ").slice(1),
-        { shell: true, detached: true, cwd: this.man.cwd, env: process.env }
-      );
-      inp.stdout.on("data", (d) => {
-        this.output.push(...d.toString("utf8").split("\n"));
-        this.update();
-      });
-      inp.stderr.on("data", (d) => {
-        this.output.push(...d.toString("utf8").split("\n"));
-        this.update();
-      });
-      inp.on("exit", (d) => {
-        this.output.push("exit " + d);
-        this.update();
-      });
-      this.reset();
+      this.pty.write(this.input.join("") + "\r");
+      this.reset(true);
     } else if (key.name == "backspace") {
       if (this.input[this.cursorPos - 1])
         this.input.splice(this.cursorPos - 1, 1);
@@ -88,7 +73,7 @@ export default class CommandPrompt {
     console.clear();
     this.man.printTitle();
     process.stdout.cursorTo(0, 1);
-    process.stdout.write(this.output.join("\n"));
+    process.stdout.write(this.output.join(""));
     process.stdout.cursorTo(0, termSize().height);
     process.stdout.write(chalk.bgWhite.black(" ".repeat(termSize().width)));
     process.stdout.cursorTo(0, termSize().height);
@@ -98,9 +83,26 @@ export default class CommandPrompt {
     process.stdout.cursorTo(0, termSize().height);
   }
 
-  public reset() {
+  public reset(dontKill = false) {
     this.input = [];
     this.cursorPos = 0;
     this.historyIndex = -1;
+
+    if (!dontKill) {
+      if (this.pty) {
+        this.pty.kill();
+      }
+      this.pty = spawn(platform() === "win32" ? "powershell.exe" : "bash", [], {
+        name: "fileman",
+        cols: termSize().columns,
+        rows: termSize().rows,
+        cwd: this.man.cwd,
+        env: process.env,
+      });
+      this.pty.onData((data) => {
+        this.output.push(data);
+        this.update();
+      });
+    }
   }
 }
