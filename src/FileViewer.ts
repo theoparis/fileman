@@ -1,11 +1,11 @@
-import * as chalk from "chalk";
+import chalk from "chalk";
 import { readdirSync, statSync } from "fs";
 import { DateTime } from "luxon";
 import { join } from "path";
-import { CustomFiles, File, Icons } from "./definitions";
-import FileManager from "./FileManager";
-import { formatBytes } from "./libs/formatters";
-import { termSize } from "./libs/termSize";
+import { CustomFiles, File, Icons } from "./definitions.js";
+import FileManager from "./FileManager.js";
+import { formatBytes } from "./libs/formatters.js";
+import { termSize } from "./libs/termSize.js";
 
 let numEntries = () => termSize().height - 2;
 let minS = 0;
@@ -161,7 +161,7 @@ export default class FileViewer {
 
       write.push(
         `${ico} ` +
-          (this.scroll == ind ? chalk.bgWhite.black : String)(
+          (this.scroll == ind ? chalk.black.bgWhite : String)(
             `${sliced} ${this.man.opts.debug ? ` ${ind}` : ""}${pad}${endItems}`
           )
       );

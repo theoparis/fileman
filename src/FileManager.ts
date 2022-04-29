@@ -1,11 +1,11 @@
-import * as chalk from "chalk";
+import chalk from "chalk";
 import { execSync } from "child_process";
 import { emitKeypressEvents, Key } from "readline";
-import CommandPrompt from "./CommandPrompt";
-import { Icons, Mode, Options } from "./definitions";
-import FileViewer from "./FileViewer";
-import centerAlign from "./libs/centerAlign";
-import { termSize } from "./libs/termSize";
+import CommandPrompt from "./CommandPrompt.js";
+import { Icons, Mode, Options } from "./definitions.js";
+import FileViewer from "./FileViewer.js";
+import centerAlign from "./libs/centerAlign.js";
+import { termSize } from "./libs/termSize.js";
 
 export default class FileManager {
   public opts: Options = {
@@ -67,7 +67,7 @@ export default class FileManager {
     let title = this.title + " - FileMan";
     process.stdout.cursorTo(0, 0);
     process.stdout.write(
-      chalk.bgBlue.white(
+      chalk.white.bgBlue(
         Icons.window +
           (centerAlign(title, termSize().width - 1) + "  ").slice(1)
       )

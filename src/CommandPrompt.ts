@@ -1,9 +1,9 @@
 import * as chalk from "chalk";
 import { IPty, spawn } from "node-pty";
 import { Key } from "readline";
-import { Mode, validCharacters } from "./definitions";
-import FileManager from "./FileManager";
-import { termSize } from "./libs/termSize";
+import { Mode, validCharacters } from "./definitions.js";
+import FileManager from "./FileManager.js";
+import { termSize } from "./libs/termSize.js";
 import { platform } from "os";
 
 export default class CommandPrompt {
